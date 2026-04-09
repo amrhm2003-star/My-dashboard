@@ -368,6 +368,35 @@
     .auth-footer { text-align:center; font-size:13px; color:var(--muted); margin-top:18px; }
     .auth-footer a { color:var(--accent); font-weight:600; cursor:pointer; }
 
+    /* ── Remember Me ── */
+    .remember-row {
+      display:flex; align-items:center; gap:9px;
+      margin-bottom:18px; cursor:pointer; width:fit-content;
+    }
+    .remember-row input[type="checkbox"] { display:none; }
+    .remember-box {
+      width:18px; height:18px; border-radius:5px; flex-shrink:0;
+      border:1.5px solid var(--border2); background:#080d18;
+      display:flex; align-items:center; justify-content:center;
+      transition:all .2s; position:relative; overflow:hidden;
+    }
+    .remember-box::after {
+      content:'\f00c'; font-family:'Font Awesome 6 Free'; font-weight:900;
+      font-size:10px; color:#fff;
+      opacity:0; transform:scale(0) rotate(-20deg);
+      transition:all .2s cubic-bezier(.16,1,.3,1);
+    }
+    .remember-row input:checked ~ .remember-box {
+      background:var(--accent); border-color:var(--accent);
+      box-shadow:0 0 10px rgba(59,130,246,.4);
+    }
+    .remember-row input:checked ~ .remember-box::after {
+      opacity:1; transform:scale(1) rotate(0deg);
+    }
+    .remember-label { font-size:13px; color:var(--muted); user-select:none; transition:color .2s; }
+    .remember-row:hover .remember-label { color:var(--text); }
+    .remember-row:hover .remember-box { border-color:var(--accent); }
+
     .auth-error {
       background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3);
       color:#f87171; font-size:12.5px; padding:10px 14px; border-radius:8px;
@@ -902,6 +931,11 @@
       <input type="email" id="lEmail" placeholder="you@oposupport.com"/></div>
     <div class="field"><label>Password</label>
       <input type="password" id="lPass" placeholder="••••••••"/></div>
+    <label class="remember-row">
+      <input type="checkbox" id="rememberMe"/>
+      <span class="remember-box"></span>
+      <span class="remember-label">Remember me</span>
+    </label>
     <button class="auth-btn" onclick="doLogin()">Sign In</button>
     <p class="auth-footer">No account? <a onclick="showScreen('signupScreen')">Sign up</a></p>
   </div>
@@ -1674,6 +1708,15 @@ function saveProfile() {
   alert('Profile saved successfully.');
 }
 
+/* ── Restore remembered credentials ─────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  if(localStorage.getItem('opo_remember')==='1'){
+    $('lEmail').value = localStorage.getItem('opo_email')||'';
+    $('lPass').value  = localStorage.getItem('opo_pass') ||'';
+    $('rememberMe').checked = true;
+  }
+});
+
 /* ── Splash screen ──────────────────────────────────── */
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
@@ -1833,6 +1876,16 @@ function doLogin() {
     $('loginErr').classList.add('show');
     triggerWrongPassword();
     return;
+  }
+  // Save or clear remembered credentials
+  if($('rememberMe').checked){
+    localStorage.setItem('opo_email', email);
+    localStorage.setItem('opo_pass',  pass);
+    localStorage.setItem('opo_remember','1');
+  } else {
+    localStorage.removeItem('opo_email');
+    localStorage.removeItem('opo_pass');
+    localStorage.removeItem('opo_remember');
   }
   $('loginErr').classList.remove('show');
   const btn = document.querySelector('#loginScreen .auth-btn');
