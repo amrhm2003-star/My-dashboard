@@ -616,6 +616,27 @@
     .cli-name  { font-size:13px; font-weight:600; color:var(--text); }
     .cli-id    { font-size:11px; color:var(--muted); }
 
+    /* ── Hover-reveal action buttons inside client cell ── */
+    .client-cell { position:relative; min-width:180px; }
+    .client-cell .cli-row { transition:opacity .18s, transform .18s; }
+    .client-cell:hover .cli-row { opacity:0; transform:translateX(-6px); pointer-events:none; }
+    .td-actions {
+      position:absolute; inset:0;
+      display:flex; align-items:center; gap:6px; padding:0 4px;
+      opacity:0; transform:translateX(8px);
+      transition:opacity .18s, transform .18s;
+      pointer-events:none;
+    }
+    .client-cell:hover .td-actions { opacity:1; transform:translateX(0); pointer-events:auto; }
+    .td-actions .btn-approve,
+    .td-actions .btn-reject,
+    .td-actions .btn-view {
+      padding:5px 11px; font-size:11.5px;
+    }
+    .td-actions .btn-approve:hover { box-shadow:0 0 12px rgba(16,185,129,.4); }
+    .td-actions .btn-reject:hover  { box-shadow:0 0 12px rgba(239,68,68,.4); }
+    .td-actions .btn-view:hover    { box-shadow:0 0 12px rgba(59,130,246,.4); }
+
     /* ── Recon rows ── */
     .recon-row {
       display:flex; align-items:center; justify-content:space-between;
@@ -991,7 +1012,7 @@
               <button class="btn-export"><i class="fas fa-download"></i> Export CSV</button>
             </div>
             <table>
-              <thead><tr><th>Client</th><th>Amount</th><th>Method</th><th>Submitted</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Client</th><th>Amount</th><th>Method</th><th>Submitted</th></tr></thead>
               <tbody id="pendingWdBody"></tbody>
             </table>
           </div>
@@ -1419,15 +1440,21 @@ function cliCell(name,initials,color,sub) {
 /* ── Renders ────────────────────────────────────────── */
 function renderPendingWd() {
   $('pendingWdBody').innerHTML = PENDING_WD.map(t=>`<tr>
-    <td>${cliCell(t.client,t.initials,t.color,t.account)}</td>
+    <td class="client-cell">
+      <div class="cli-row">
+        <div class="cli-ava" style="background:${t.color}">${t.initials}</div>
+        <div><div class="cli-name">${t.client}</div><div class="cli-id">${t.account}</div></div>
+      </div>
+      <div class="td-actions">
+        <button class="btn-approve" onclick="alert('Approved!')">Approve</button>
+        <button class="btn-reject"  onclick="alert('Rejected!')">Reject</button>
+        <button class="btn-view"    onclick="alert('View details')">View</button>
+      </div>
+    </td>
     <td style="font-weight:700;color:var(--red)">${fmt(t.amount)}</td>
     <td>${t.method}</td>
     <td style="color:var(--muted);font-size:12px">${t.time}</td>
-    <td>
-      <button class="btn-approve" onclick="alert('Approved!')">Approve</button>
-      <button class="btn-reject"  onclick="alert('Rejected!')">Reject</button>
-      <button class="btn-view"    onclick="alert('View details')">View</button>
-    </td></tr>`).join('');
+  </tr>`).join('');
 }
 
 function renderOvChat() {
