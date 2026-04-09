@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FXBridge | Back Office & Support</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --navy:    #0f172a;
+      --navy2:   #1e293b;
+      --navy3:   #334155;
+      --bg:      #f1f5f9;
+      --white:   #ffffff;
+      --border:  #e2e8f0;
+      --text:    #0f172a;
+      --muted:   #64748b;
+      --accent:  #2563eb;
+      --green:   #16a34a;
+      --red:     #dc2626;
+      --amber:   #d97706;
+      --purple:  #7c3aed;
+      --sw:      260px;
+      --radius:  10px;
+    }
+    body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    a { text-decoration:none; color:inherit; }
+    ul { list-style:none; }
+    button { cursor:pointer; border:none; font-family:inherit; }
+    input, select { font-family:inherit; }
+
+    /* ══ AUTH ══════════════════════════════════════════ */
+    .auth-wrap {
+      display:none; min-height:100vh;
+      background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+      align-items:center; justify-content:center;
+    }
+    .auth-wrap.active { display:flex; }
+
+    .auth-card {
+      background:var(--white); border-radius:16px;
+      padding:40px 36px; width:100%; max-width:420px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      animation:fadeUp .25s ease;
+    }
+    @keyframes fadeUp {
+      from{opacity:0;transform:translateY(14px)}
+      to  {opacity:1;transform:translateY(0)}
+    }
+
+    .auth-logo { display:flex; align-items:center; gap:10px; margin-bottom:28px; }
+    .auth-logo-icon {
+      width:40px; height:40px; border-radius:10px; background:var(--accent);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:800; font-size:16px;
+    }
+    .auth-logo-name { font-size:19px; font-weight:800; color:var(--navy); }
+    .auth-logo-name span { color:var(--accent); }
+
+    .auth-title { font-size:22px; font-weight:700; color:var(--navy); margin-bottom:6px; }
+    .auth-sub   { font-size:13px; color:var(--muted); margin-bottom:28px; }
+
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-size:12px; color:var(--muted); font-weight:600;
+      text-transform:uppercase; letter-spacing:.04em; margin-bottom:7px; }
+    .field input {
+      width:100%; background:var(--bg); border:1.5px solid var(--border);
+      color:var(--text); border-radius:8px; padding:11px 14px; font-size:14px;
+      outline:none; transition:border-color .15s;
+    }
+    .field input:focus { border-color:var(--accent); background:#fff; }
+
+    .auth-btn {
+      width:100%; background:var(--accent); color:#fff; font-size:14px;
+      font-weight:700; padding:13px; border-radius:8px; transition:opacity .15s;
+    }
+    .auth-btn:hover { opacity:.88; }
+    .auth-footer { text-align:center; font-size:13px; color:var(--muted); margin-top:18px; }
+    .auth-footer a { color:var(--accent); font-weight:600; cursor:pointer; }
+
+    .auth-error {
+      background:#fef2f2; border:1px solid #fecaca; color:var(--red);
+      font-size:12.5px; padding:10px 14px; border-radius:7px;
+      margin-bottom:14px; display:none;
+    }
+    .auth-error.show { display:block; }
+
+    /* ══ DASHBOARD ═════════════════════════════════════ */
+    #dashboard { display:none; }
+    #dashboard.active { display:flex; min-height:100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width:var(--sw); background:var(--navy); color:#fff;
+      display:flex; flex-direction:column;
+      position:fixed; top:0; left:0; bottom:0; z-index:100;
+    }
+
+    .logo {
+      padding:22px 20px 18px; border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex; align-items:center; gap:10px;
+    }
+    .logo-icon {
+      width:36px; height:36px; background:var(--accent); border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:14px; color:#fff;
+    }
+    .logo-name { font-size:16px; font-weight:800; }
+    .logo-sub  { font-size:10px; color:rgba(255,255,255,.4); text-transform:uppercase;
+      letter-spacing:.1em; margin-top:1px; }
+
+    nav { padding:16px 12px; flex:1; overflow-y:auto; }
+    .nav-section { font-size:10px; color:rgba(255,255,255,.35); text-transform:uppercase;
+      letter-spacing:.1em; padding:10px 10px 5px; }
+    .nav-item {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px; border-radius:8px; font-size:13.5px;
+      color:rgba(255,255,255,.55); font-weight:500;
+      margin-bottom:2px; cursor:pointer; transition:all .15s;
+    }
+    .nav-item i { width:16px; text-align:center; font-size:13px; flex-shrink:0; }
+    .nav-item:hover { background:rgba(255,255,255,.07); color:#fff; }
+    .nav-item.active { background:var(--accent); color:#fff; font-weight:600; }
+
+    .nav-count {
+      margin-left:auto; font-size:10px; font-weight:700;
+      padding:2px 7px; border-radius:99px; background:rgba(255,255,255,.15); color:#fff;
+    }
+    .nav-item.active .nav-count { background:rgba(255,255,255,.25); }
+    .nav-count.red    { background:#dc2626; }
+    .nav-count.green  { background:#16a34a; }
+    .nav-count.amber  { background:#d97706; }
+
+    .sidebar-user {
+      padding:14px 18px; border-top:1px solid rgba(255,255,255,.08);
+      display:flex; align-items:center; gap:10px;
+    }
+    .s-ava {
+      width:34px; height:34px; border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--purple));
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:700; color:#fff; flex-shrink:0;
+    }
+    .s-name { font-size:13px; font-weight:600; color:#fff; }
+    .s-role { font-size:11px; color:rgba(255,255,255,.4); }
+
+    /* ── Main ── */
+    .main { margin-left:var(--sw); flex:1; display:flex; flex-direction:column; }
+
+    /* ── Topbar ── */
+    .topbar {
+      background:var(--white); border-bottom:1px solid var(--border);
+      padding:0 28px; height:64px;
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:50;
+    }
+    .topbar-left h1 { font-size:17px; font-weight:700; color:var(--navy); }
+    .topbar-left p  { font-size:12px; color:var(--muted); margin-top:1px; }
+
+    .topbar-right { display:flex; align-items:center; gap:14px; }
+
+    .search-bar {
+      display:flex; align-items:center; gap:8px;
+      background:var(--bg); border:1.5px solid var(--border);
+      border-radius:8px; padding:7px 14px;
+    }
+    .search-bar i { color:var(--muted); font-size:13px; }
+    .search-bar input {
+      background:transparent; border:none; outline:none;
+      font-size:13px; color:var(--text); width:180px;
+    }
+    .search-bar input::placeholder { color:var(--muted); }
+
+    .notif-btn {
+      width:36px; height:36px; border-radius:8px;
+      background:var(--bg); border:1.5px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; position:relative;
+    }
+    .notif-btn i { color:var(--muted); font-size:14px; }
+    .notif-dot {
+      position:absolute; top:5px; right:5px;
+      width:8px; height:8px; border-radius:50%;
+      background:var(--red); border:2px solid var(--white);
+    }
+
+    .user-chip {
+      display:flex; align-items:center; gap:9px; cursor:pointer;
+    }
+    .u-ava {
+      width:34px; height:34px; border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--purple));
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:700; color:#fff;
+    }
+    .u-name { font-size:13px; font-weight:600; color:var(--navy); }
+    .u-role { font-size:11px; color:var(--muted); }
+
+    .logout-btn {
+      width:34px; height:34px; border-radius:8px; background:var(--bg);
+      border:1.5px solid var(--border); display:flex; align-items:center;
+      justify-content:center; color:var(--muted); font-size:14px;
+      transition:all .15s;
+    }
+    .logout-btn:hover { background:#fef2f2; color:var(--red); border-color:#fecaca; }
+
+    /* ── Content ── */
+    .content { padding:28px; }
+    .section { display:none; }
+    .section.active { display:block; }
+
+    /* ── Page heading ── */
+    .page-heading { margin-bottom:22px; }
+    .page-heading h2 { font-size:22px; font-weight:700; color:var(--navy); }
+    .page-heading p  { font-size:13px; color:var(--muted); margin-top:4px; }
+
+    /* ── KPI grid ── */
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .kpi-card {
+      background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius);
+      padding:20px 22px; display:flex; align-items:flex-start; justify-content:space-between;
+      transition:box-shadow .2s, border-color .2s;
+    }
+    .kpi-card:hover { box-shadow:0 4px 20px rgba(0,0,0,.07); border-color:#cbd5e1; }
+    .kpi-left { display:flex; flex-direction:column; }
+    .kpi-label { font-size:11px; color:var(--muted); text-transform:uppercase;
+      letter-spacing:.06em; font-weight:600; margin-bottom:10px; }
+    .kpi-value { font-size:30px; font-weight:800; color:var(--navy); letter-spacing:-1px; margin-bottom:6px; }
+    .kpi-trend { font-size:12px; display:flex; align-items:center; gap:4px; }
+    .t-up   { color:var(--green); }
+    .t-down { color:var(--red); }
+    .t-neu  { color:var(--muted); }
+    .kpi-icon {
+      width:40px; height:40px; border-radius:10px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; font-size:16px;
+    }
+
+    /* ── Two-col / equal grids ── */
+    .grid2   { display:grid; grid-template-columns:3fr 2fr; gap:20px; margin-bottom:24px; }
+    .grid-eq { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
+    .grid3   { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px; }
+
+    /* ── Card ── */
+    .card {
+      background:var(--white); border:1.5px solid var(--border);
+      border-radius:var(--radius); overflow:hidden;
+    }
+    .card-head {
+      padding:16px 22px; border-bottom:1.5px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .card-head h3 { font-size:14px; font-weight:700; color:var(--navy); }
+    .card-head .sub { font-size:12px; color:var(--muted); margin-top:2px; }
+    .card-action {
+      font-size:13px; color:var(--accent); font-weight:600;
+      cursor:pointer; background:transparent; padding:0;
+      transition:opacity .15s;
+    }
+    .card-action:hover { opacity:.75; }
+    .card-body { padding:16px 22px; }
+
+    /* ── Table ── */
+    table { width:100%; border-collapse:collapse; }
+    th {
+      text-align:left; font-size:11px; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.07em; font-weight:600;
+      padding:10px 16px; border-bottom:1.5px solid var(--border);
+      background:#f8fafc;
+    }
+    td {
+      padding:13px 16px; font-size:13px; color:var(--text);
+      border-bottom:1px solid var(--border);
+    }
+    tr:last-child td { border-bottom:none; }
+    tbody tr:hover td { background:#f8fafc; }
+
+    /* ── Badges ── */
+    .badge {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:4px 10px; border-radius:99px; font-size:11px; font-weight:600;
+    }
+    .b-green  { background:#dcfce7; color:#15803d; }
+    .b-red    { background:#fee2e2; color:#b91c1c; }
+    .b-amber  { background:#fef3c7; color:#b45309; }
+    .b-blue   { background:#dbeafe; color:#1d4ed8; }
+    .b-purple { background:#ede9fe; color:#6d28d9; }
+    .b-gray   { background:#f1f5f9; color:#475569; }
+
+    /* ── Action buttons ── */
+    .btn-approve {
+      background:transparent; color:var(--green); border:1.5px solid var(--green);
+      font-size:12px; font-weight:600; padding:5px 12px; border-radius:6px;
+      transition:all .15s; margin-right:4px;
+    }
+    .btn-approve:hover { background:var(--green); color:#fff; }
+
+    .btn-reject {
+      background:transparent; color:var(--red); border:1.5px solid var(--red);
+      font-size:12px; font-weight:600; padding:5px 12px; border-radius:6px;
+      transition:all .15s; margin-right:4px;
+    }
+    .btn-reject:hover { background:var(--red); color:#fff; }
+
+    .btn-view {
+      background:transparent; color:var(--accent); border:1.5px solid var(--accent);
+      font-size:12px; font-weight:600; padding:5px 12px; border-radius:6px;
+      transition:all .15s;
+    }
+    .btn-view:hover { background:var(--accent); color:#fff; }
+
+    .btn-resolve {
+      background:transparent; color:var(--green); border:1.5px solid var(--green);
+      font-size:12px; font-weight:600; padding:5px 12px; border-radius:6px;
+      transition:all .15s; margin-right:4px;
+    }
+    .btn-resolve:hover { background:var(--green); color:#fff; }
+
+    .btn-escalate {
+      background:transparent; color:var(--amber); border:1.5px solid var(--amber);
+      font-size:12px; font-weight:600; padding:5px 12px; border-radius:6px;
+      transition:all .15s;
+    }
+    .btn-escalate:hover { background:var(--amber); color:#fff; }
+
+    /* ── Client avatar ── */
+    .cli-row { display:flex; align-items:center; gap:10px; }
+    .cli-ava {
+      width:32px; height:32px; border-radius:50%; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:700; color:#fff;
+    }
+    .cli-name  { font-size:13px; font-weight:600; color:var(--navy); }
+    .cli-id    { font-size:11px; color:var(--muted); }
+
+    /* ── Recon rows ── */
+    .recon-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:11px 0; border-bottom:1px solid var(--border); font-size:13px;
+    }
+    .recon-row:last-child { border-bottom:none; }
+    .recon-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-right:10px; }
+
+    /* ── Progress ── */
+    .prog-row { margin-bottom:14px; }
+    .prog-label { display:flex; justify-content:space-between;
+      font-size:12.5px; color:var(--muted); margin-bottom:6px; font-weight:500; }
+    .prog-bar { height:7px; background:var(--bg); border-radius:99px; overflow:hidden; }
+    .prog-fill { height:100%; border-radius:99px; transition:width .6s ease; }
+
+    /* ── Chat queue items ── */
+    .chat-item {
+      display:flex; align-items:center; gap:12px;
+      padding:12px 0; border-bottom:1px solid var(--border); font-size:13px;
+    }
+    .chat-item:last-child { border-bottom:none; }
+    .chat-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .chat-name { font-weight:600; color:var(--navy); }
+    .chat-msg  { font-size:12px; color:var(--muted); margin-top:1px; }
+    .chat-time { margin-left:auto; font-size:11px; color:var(--muted); white-space:nowrap; }
+
+    /* ── Alert items ── */
+    .alert-item {
+      display:flex; gap:12px; align-items:flex-start;
+      padding:12px 0; border-bottom:1px solid var(--border);
+    }
+    .alert-item:last-child { border-bottom:none; }
+    .alert-icon {
+      width:32px; height:32px; border-radius:8px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; font-size:13px;
+    }
+    .alert-body { font-size:13px; color:var(--text); }
+    .alert-time { font-size:11px; color:var(--muted); margin-top:3px; }
+
+    /* ── Filter bar ── */
+    .filter-bar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+    .f-select {
+      background:var(--white); color:var(--text); border:1.5px solid var(--border);
+      border-radius:7px; padding:7px 12px; font-size:13px; outline:none; cursor:pointer;
+    }
+    .f-select:focus { border-color:var(--accent); }
+
+    /* ── Export btn ── */
+    .btn-export {
+      background:transparent; color:var(--accent); border:1.5px solid var(--accent);
+      font-size:12px; font-weight:600; padding:6px 14px; border-radius:6px;
+      transition:all .15s;
+    }
+    .btn-export:hover { background:var(--accent); color:#fff; }
+
+    /* ── Settings ── */
+    .s-field { margin-bottom:16px; }
+    .s-field label { display:block; font-size:11px; color:var(--muted); font-weight:600;
+      text-transform:uppercase; letter-spacing:.05em; margin-bottom:7px; }
+    .s-input {
+      width:100%; background:var(--bg); border:1.5px solid var(--border);
+      color:var(--text); border-radius:8px; padding:9px 13px; font-size:13px; outline:none;
+    }
+    .s-input:focus { border-color:var(--accent); background:#fff; }
+    .s-input:disabled { opacity:.5; cursor:not-allowed; }
+    .btn-save {
+      background:var(--accent); color:#fff; font-size:13px; font-weight:600;
+      padding:9px 20px; border-radius:7px; transition:opacity .15s;
+    }
+    .btn-save:hover { opacity:.88; }
+    .toggle-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 0; border-bottom:1px solid var(--border); font-size:13px;
+    }
+    .toggle-row:last-child { border-bottom:none; }
+    .toggle { position:relative; display:inline-block; width:40px; height:22px; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .slider {
+      position:absolute; cursor:pointer; inset:0;
+      background:#cbd5e1; border-radius:22px; transition:.25s;
+    }
+    .slider::before {
+      content:""; position:absolute; height:16px; width:16px;
+      left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.25s;
+    }
+    .toggle input:checked + .slider { background:var(--accent); }
+    .toggle input:checked + .slider::before { transform:translateX(18px); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
+      z-index:200; align-items:center; justify-content:center;
+    }
+    .modal-overlay.show { display:flex; }
+    .modal {
+      background:var(--white); border-radius:14px;
+      padding:32px; width:330px; text-align:center;
+      box-shadow:0 20px 60px rgba(0,0,0,.15);
+      animation:fadeUp .2s ease;
+    }
+    .modal-icon {
+      width:52px; height:52px; border-radius:50%; background:#fee2e2;
+      color:var(--red); display:flex; align-items:center; justify-content:center;
+      font-size:20px; margin:0 auto 16px;
+    }
+    .modal h3 { font-size:17px; font-weight:700; color:var(--navy); margin-bottom:8px; }
+    .modal p  { font-size:13px; color:var(--muted); margin-bottom:24px; }
+    .modal-btns { display:flex; gap:10px; justify-content:center; }
+    .btn-cancel { background:var(--bg); color:var(--text); font-size:13px;
+      font-weight:600; padding:9px 20px; border-radius:7px; border:1.5px solid var(--border); }
+    .btn-danger { background:var(--red); color:#fff; font-size:13px;
+      font-weight:600; padding:9px 20px; border-radius:7px; }
+
+    /* ── Responsive ── */
+    @media(max-width:1200px) {
+      .kpi-grid { grid-template-columns:repeat(2,1fr); }
+      .grid2, .grid-eq { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ════════════════════════════════════════ -->
+<div class="auth-wrap active" id="loginScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">FX</div>
+      <div>
+        <div class="auth-logo-name">FX<span>Bridge</span></div>
+      </div>
+    </div>
+    <h2 class="auth-title">Welcome back</h2>
+    <p class="auth-sub">Sign in to your Back Office & Support portal</p>
+    <div class="auth-error" id="loginErr">Please enter your email and password.</div>
+    <div class="field"><label>Email address</label>
+      <input type="email" id="lEmail" placeholder="you@fxbridge.com"/></div>
+    <div class="field"><label>Password</label>
+      <input type="password" id="lPass" placeholder="••••••••"/></div>
+    <button class="auth-btn" onclick="doLogin()">Sign In</button>
+    <p class="auth-footer">No account? <a onclick="showScreen('signupScreen')">Sign up</a></p>
+  </div>
+</div>
+
+<!-- ══ SIGN UP ═══════════════════════════════════════ -->
+<div class="auth-wrap" id="signupScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">FX</div>
+      <div><div class="auth-logo-name">FX<span>Bridge</span></div></div>
+    </div>
+    <h2 class="auth-title">Create account</h2>
+    <p class="auth-sub">Join the FXBridge back office & support team</p>
+    <div class="auth-error" id="signupErr">Please fill in all fields.</div>
+    <div class="field"><label>Full name</label>
+      <input type="text" id="sName" placeholder="John Doe"/></div>
+    <div class="field"><label>Email address</label>
+      <input type="email" id="sEmail" placeholder="you@fxbridge.com"/></div>
+    <div class="field"><label>Password</label>
+      <input type="password" id="sPass" placeholder="Min. 6 characters"/></div>
+    <button class="auth-btn" onclick="doSignup()">Create Account</button>
+    <p class="auth-footer">Have an account? <a onclick="showScreen('loginScreen')">Sign in</a></p>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ═════════════════════════════════════ -->
+<div id="dashboard">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">FX</div>
+      <div>
+        <div class="logo-name">FXBridge</div>
+        <div class="logo-sub">Back Office Portal</div>
+      </div>
+    </div>
+
+    <nav>
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" onclick="goTo('overview',this)">
+        <i class="fas fa-th-large"></i> Overview
+      </div>
+
+      <div class="nav-section">Back Office</div>
+      <div class="nav-item" onclick="goTo('transactions',this)">
+        <i class="fas fa-exchange-alt"></i> Transactions
+        <span class="nav-count amber">18</span>
+      </div>
+      <div class="nav-item" onclick="goTo('reconciliation',this)">
+        <i class="fas fa-check-double"></i> Reconciliation
+        <span class="nav-count red">3</span>
+      </div>
+      <div class="nav-item" onclick="goTo('clients',this)">
+        <i class="fas fa-users"></i> Clients
+        <span class="nav-count green">1247</span>
+      </div>
+      <div class="nav-item" onclick="goTo('reports',this)">
+        <i class="fas fa-chart-bar"></i> Reports
+      </div>
+
+      <div class="nav-section">Chat Support</div>
+      <div class="nav-item" onclick="goTo('livechat',this)">
+        <i class="fas fa-comments"></i> Live Chat
+        <span class="nav-count" style="background:#2563eb">4</span>
+      </div>
+      <div class="nav-item" onclick="goTo('tickets',this)">
+        <i class="fas fa-ticket-alt"></i> Tickets
+        <span class="nav-count amber">12</span>
+      </div>
+      <div class="nav-item" onclick="goTo('escalations',this)">
+        <i class="fas fa-exclamation-triangle"></i> Escalations
+        <span class="nav-count red">3</span>
+      </div>
+
+      <div class="nav-section">Account</div>
+      <div class="nav-item" onclick="goTo('settings',this)">
+        <i class="fas fa-cog"></i> Settings
+      </div>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="s-ava" id="sideAva">JD</div>
+      <div>
+        <div class="s-name" id="sideName">John Doe</div>
+        <div class="s-role">Back Office & Support</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1 id="topTitle">Overview</h1>
+        <p id="topSub">Dashboard summary</p>
+      </div>
+      <div class="topbar-right">
+        <div class="search-bar">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search clients, transactions…"/>
+        </div>
+        <div class="notif-btn"><i class="fas fa-bell"></i><div class="notif-dot"></div></div>
+        <div class="user-chip">
+          <div class="u-ava" id="topAva">JD</div>
+          <div>
+            <div class="u-name" id="topName">John Doe</div>
+            <div class="u-role">Back Office & Support</div>
+          </div>
+        </div>
+        <button class="logout-btn" title="Logout"
+          onclick="document.getElementById('logoutModal').classList.add('show')">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ══ OVERVIEW ══════════════════════════════════ -->
+      <div class="section active" id="sec-overview">
+        <div class="page-heading">
+          <h2>Overview</h2>
+          <p id="greetMsg">Here's what needs your attention today.</p>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-left">
+              <div class="kpi-label">Deposits Today</div>
+              <div class="kpi-value" style="color:var(--green)">$284,500</div>
+              <div class="kpi-trend t-up"><i class="fas fa-arrow-up"></i> 12.4% vs yesterday</div>
+            </div>
+            <div class="kpi-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-arrow-down"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left">
+              <div class="kpi-label">Withdrawals Today</div>
+              <div class="kpi-value" style="color:var(--red)">$97,200</div>
+              <div class="kpi-trend t-down"><i class="fas fa-arrow-down"></i> 3.1% vs yesterday</div>
+            </div>
+            <div class="kpi-icon" style="background:#fee2e2;color:#dc2626"><i class="fas fa-arrow-up"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left">
+              <div class="kpi-label">Active Chats</div>
+              <div class="kpi-value" style="color:var(--accent)">4</div>
+              <div class="kpi-trend t-neu"><i class="fas fa-minus"></i> 2 waiting in queue</div>
+            </div>
+            <div class="kpi-icon" style="background:#dbeafe;color:#2563eb"><i class="fas fa-comments"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left">
+              <div class="kpi-label">Pending Approvals</div>
+              <div class="kpi-value" style="color:var(--amber)">18</div>
+              <div class="kpi-trend t-down"><i class="fas fa-exclamation"></i> 5 urgent</div>
+            </div>
+            <div class="kpi-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-clock"></i></div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head">
+              <div><h3>Pending Withdrawals</h3><div class="sub">Awaiting your approval</div></div>
+              <button class="btn-export"><i class="fas fa-download"></i> Export CSV</button>
+            </div>
+            <table>
+              <thead><tr><th>Client</th><th>Amount</th><th>Method</th><th>Submitted</th><th>Actions</th></tr></thead>
+              <tbody id="pendingWdBody"></tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Live Chat Queue</h3>
+              <button class="card-action" onclick="goTo('livechat',document.querySelector('[onclick*=livechat]'))">Open all</button>
+            </div>
+            <div class="card-body" style="padding:4px 16px">
+              <div id="ovChatList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-eq">
+          <div class="card">
+            <div class="card-head"><h3>Reconciliation Status</h3></div>
+            <div class="card-body">
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#16a34a"></div>MT4 / Core Banking</div><span class="badge b-green">Matched</span></div>
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#16a34a"></div>Card Payments</div><span class="badge b-green">Matched</span></div>
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#d97706"></div>Wire Transfers</div><span class="badge b-amber">2 Pending</span></div>
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#dc2626"></div>Crypto Deposits</div><span class="badge b-red">Mismatch</span></div>
+              <div style="margin-top:16px">
+                <div class="prog-label"><span>Daily completion</span><span style="font-weight:600">80%</span></div>
+                <div class="prog-bar"><div class="prog-fill" style="width:80%;background:var(--accent)"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Alerts</h3><span class="badge b-red">3 critical</span></div>
+            <div class="card-body">
+              <div class="alert-item">
+                <div class="alert-icon" style="background:#fee2e2;color:#dc2626"><i class="fas fa-exclamation-triangle"></i></div>
+                <div><div class="alert-body">BTC deposit mismatch — $5,400 discrepancy</div><div class="alert-time">Today, 09:14 AM</div></div>
+              </div>
+              <div class="alert-item">
+                <div class="alert-icon" style="background:#fee2e2;color:#dc2626"><i class="fas fa-exclamation-triangle"></i></div>
+                <div><div class="alert-body">Large withdrawal flagged — $87,000 wire</div><div class="alert-time">Today, 08:47 AM</div></div>
+              </div>
+              <div class="alert-item">
+                <div class="alert-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-info-circle"></i></div>
+                <div><div class="alert-body">SEPA wire delayed 48h — follow up required</div><div class="alert-time">Yesterday, 04:12 PM</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ TRANSACTIONS ══════════════════════════════ -->
+      <div class="section" id="sec-transactions">
+        <div class="page-heading">
+          <h2>Transactions</h2>
+          <p>Review and process all client deposits and withdrawals</p>
+        </div>
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Total Volume Today</div><div class="kpi-value">$381,700</div><div class="kpi-trend t-up"><i class="fas fa-arrow-up"></i> 9.2%</div></div>
+            <div class="kpi-icon" style="background:#dbeafe;color:var(--accent)"><i class="fas fa-chart-line"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Successful</div><div class="kpi-value" style="color:var(--green)">94</div><div class="kpi-trend t-up">91% success rate</div></div>
+            <div class="kpi-icon" style="background:#dcfce7;color:var(--green)"><i class="fas fa-check-circle"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Failed / Pending</div><div class="kpi-value" style="color:var(--red)">9</div><div class="kpi-trend t-down">Need attention</div></div>
+            <div class="kpi-icon" style="background:#fee2e2;color:var(--red)"><i class="fas fa-times-circle"></i></div>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <select class="f-select" id="txnType" onchange="renderTxns()">
+            <option value="all">All Types</option>
+            <option value="Deposit">Deposits</option>
+            <option value="Withdrawal">Withdrawals</option>
+          </select>
+          <select class="f-select" id="txnStat" onchange="renderTxns()">
+            <option value="all">All Status</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="failed">Failed</option>
+          </select>
+          <button class="btn-export" style="margin-left:auto"><i class="fas fa-download"></i> Export CSV</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>TXN ID</th><th>Client</th><th>Type</th><th>Amount</th><th>Method</th><th>Account</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="txnBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ RECONCILIATION ════════════════════════════ -->
+      <div class="section" id="sec-reconciliation">
+        <div class="page-heading">
+          <h2>Reconciliation</h2>
+          <p>Daily matching of platform balances against payment sources</p>
+        </div>
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Matched Items</div><div class="kpi-value" style="color:var(--green)">412</div><div class="kpi-trend t-up">97.2% match rate</div></div>
+            <div class="kpi-icon" style="background:#dcfce7;color:var(--green)"><i class="fas fa-check-double"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Unmatched</div><div class="kpi-value" style="color:var(--red)">12</div><div class="kpi-trend t-down">Needs resolution</div></div>
+            <div class="kpi-icon" style="background:#fee2e2;color:var(--red)"><i class="fas fa-times-circle"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Under Review</div><div class="kpi-value" style="color:var(--amber)">7</div><div class="kpi-trend t-neu">In progress</div></div>
+            <div class="kpi-icon" style="background:#fef3c7;color:var(--amber)"><i class="fas fa-hourglass-half"></i></div>
+          </div>
+        </div>
+        <div class="grid-eq">
+          <div class="card">
+            <div class="card-head"><h3>Source Status</h3></div>
+            <div class="card-body">
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#16a34a"></div>MT4 Platform</div><span class="badge b-green">Matched</span></div>
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#16a34a"></div>MT5 Platform</div><span class="badge b-green">Matched</span></div>
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#16a34a"></div>Card Payments</div><span class="badge b-green">Matched</span></div>
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#16a34a"></div>Skrill / Neteller</div><span class="badge b-green">Matched</span></div>
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#d97706"></div>SWIFT Wire</div><span class="badge b-amber">Pending</span></div>
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#d97706"></div>SEPA Wire</div><span class="badge b-amber">Pending</span></div>
+              <div class="recon-row"><div style="display:flex;align-items:center"><div class="recon-dot" style="background:#dc2626"></div>BTC Deposits</div><span class="badge b-red">Mismatch</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Completion Progress</h3></div>
+            <div class="card-body">
+              <div class="prog-row"><div class="prog-label"><span>MT4 Balance</span><span>100%</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--green)"></div></div></div>
+              <div class="prog-row"><div class="prog-label"><span>Card Payments</span><span>100%</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--green)"></div></div></div>
+              <div class="prog-row"><div class="prog-label"><span>Wire Transfers</span><span>60%</span></div><div class="prog-bar"><div class="prog-fill" style="width:60%;background:var(--amber)"></div></div></div>
+              <div class="prog-row"><div class="prog-label"><span>Crypto Wallets</span><span>85%</span></div><div class="prog-bar"><div class="prog-fill" style="width:85%;background:var(--accent)"></div></div></div>
+              <div class="prog-row"><div class="prog-label"><span>Overall</span><span>80%</span></div><div class="prog-bar"><div class="prog-fill" style="width:80%;background:linear-gradient(90deg,var(--accent),var(--purple))"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CLIENTS ════════════════════════════════════ -->
+      <div class="section" id="sec-clients">
+        <div class="page-heading">
+          <h2>Clients</h2>
+          <p>View and manage client accounts</p>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Total Clients</div><div class="kpi-value">1,247</div><div class="kpi-trend t-up"><i class="fas fa-arrow-up"></i> 8 today</div></div>
+            <div class="kpi-icon" style="background:#dbeafe;color:var(--accent)"><i class="fas fa-users"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">KYC Pending</div><div class="kpi-value" style="color:var(--amber)">34</div><div class="kpi-trend t-neu">Needs review</div></div>
+            <div class="kpi-icon" style="background:#fef3c7;color:var(--amber)"><i class="fas fa-id-card"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Verified</div><div class="kpi-value" style="color:var(--green)">1,189</div><div class="kpi-trend t-up">95.3%</div></div>
+            <div class="kpi-icon" style="background:#dcfce7;color:var(--green)"><i class="fas fa-user-check"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Suspended</div><div class="kpi-value" style="color:var(--red)">24</div><div class="kpi-trend t-down">Under review</div></div>
+            <div class="kpi-icon" style="background:#fee2e2;color:var(--red)"><i class="fas fa-user-slash"></i></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Client Accounts</h3>
+            <button class="btn-export"><i class="fas fa-download"></i> Export CSV</button>
+          </div>
+          <table>
+            <thead><tr><th>Client</th><th>Country</th><th>Balance</th><th>Type</th><th>KYC</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="clientBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ REPORTS ════════════════════════════════════ -->
+      <div class="section" id="sec-reports">
+        <div class="page-heading"><h2>Reports</h2><p>Monthly financial and operational summaries</p></div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-head"><h3>Monthly Summary</h3>
+            <button class="btn-export"><i class="fas fa-download"></i> Export CSV</button>
+          </div>
+          <table>
+            <thead><tr><th>Month</th><th>Deposits</th><th>Withdrawals</th><th>Net Flow</th><th>New Clients</th><th>Tickets Resolved</th></tr></thead>
+            <tbody>
+              <tr><td>January 2025</td><td style="color:var(--green);font-weight:600">$2,140,000</td><td style="color:var(--red);font-weight:600">$890,000</td><td style="color:var(--green);font-weight:600">+$1,250,000</td><td>134</td><td>312</td></tr>
+              <tr><td>February 2025</td><td style="color:var(--green);font-weight:600">$1,980,000</td><td style="color:var(--red);font-weight:600">$750,000</td><td style="color:var(--green);font-weight:600">+$1,230,000</td><td>118</td><td>289</td></tr>
+              <tr><td>March 2025</td><td style="color:var(--green);font-weight:600">$2,450,000</td><td style="color:var(--red);font-weight:600">$1,020,000</td><td style="color:var(--green);font-weight:600">+$1,430,000</td><td>152</td><td>341</td></tr>
+              <tr><td>April 2025</td><td style="color:var(--green);font-weight:600">$2,210,000</td><td style="color:var(--red);font-weight:600">$940,000</td><td style="color:var(--green);font-weight:600">+$1,270,000</td><td>141</td><td>298</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid-eq">
+          <div class="card"><div class="card-head"><h3>Deposits by Method</h3></div><div class="card-body">
+            <div class="prog-row"><div class="prog-label"><span>Wire Transfer</span><span>38%</span></div><div class="prog-bar"><div class="prog-fill" style="width:38%;background:var(--accent)"></div></div></div>
+            <div class="prog-row"><div class="prog-label"><span>Card</span><span>29%</span></div><div class="prog-bar"><div class="prog-fill" style="width:29%;background:var(--green)"></div></div></div>
+            <div class="prog-row"><div class="prog-label"><span>Crypto</span><span>14%</span></div><div class="prog-bar"><div class="prog-fill" style="width:14%;background:var(--amber)"></div></div></div>
+            <div class="prog-row"><div class="prog-label"><span>Skrill</span><span>11%</span></div><div class="prog-bar"><div class="prog-fill" style="width:11%;background:var(--purple)"></div></div></div>
+            <div class="prog-row"><div class="prog-label"><span>Neteller</span><span>8%</span></div><div class="prog-bar"><div class="prog-fill" style="width:8%;background:#db2777"></div></div></div>
+          </div></div>
+          <div class="card"><div class="card-head"><h3>Ticket Categories</h3></div><div class="card-body">
+            <div class="prog-row"><div class="prog-label"><span>Withdrawal Issues</span><span>34%</span></div><div class="prog-bar"><div class="prog-fill" style="width:34%;background:var(--red)"></div></div></div>
+            <div class="prog-row"><div class="prog-label"><span>KYC / Docs</span><span>26%</span></div><div class="prog-bar"><div class="prog-fill" style="width:26%;background:var(--amber)"></div></div></div>
+            <div class="prog-row"><div class="prog-label"><span>Trade Disputes</span><span>20%</span></div><div class="prog-bar"><div class="prog-fill" style="width:20%;background:var(--accent)"></div></div></div>
+            <div class="prog-row"><div class="prog-label"><span>Account Access</span><span>12%</span></div><div class="prog-bar"><div class="prog-fill" style="width:12%;background:var(--green)"></div></div></div>
+            <div class="prog-row"><div class="prog-label"><span>Other</span><span>8%</span></div><div class="prog-bar"><div class="prog-fill" style="width:8%;background:var(--purple)"></div></div></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- ══ LIVE CHAT ══════════════════════════════════ -->
+      <div class="section" id="sec-livechat">
+        <div class="page-heading">
+          <h2>Live Chat</h2>
+          <p>Handle active client conversations in real time</p>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Active Chats</div><div class="kpi-value" style="color:var(--accent)">4</div><div class="kpi-trend t-neu">2 waiting</div></div>
+            <div class="kpi-icon" style="background:#dbeafe;color:var(--accent)"><i class="fas fa-comments"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Resolved Today</div><div class="kpi-value" style="color:var(--green)">38</div><div class="kpi-trend t-up"><i class="fas fa-arrow-up"></i> 14%</div></div>
+            <div class="kpi-icon" style="background:#dcfce7;color:var(--green)"><i class="fas fa-check-circle"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Avg Response</div><div class="kpi-value">1m 20s</div><div class="kpi-trend t-up">Faster today</div></div>
+            <div class="kpi-icon" style="background:#fef3c7;color:var(--amber)"><i class="fas fa-clock"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">CSAT Score</div><div class="kpi-value" style="color:var(--green)">4.9/5</div><div class="kpi-trend t-up"><i class="fas fa-arrow-up"></i> 0.1</div></div>
+            <div class="kpi-icon" style="background:#dcfce7;color:var(--green)"><i class="fas fa-star"></i></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Chat Queue</h3><div class="sub">Click Respond to open a conversation</div></div>
+          </div>
+          <table>
+            <thead><tr><th>Client</th><th>Topic</th><th>Wait Time</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="chatBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ TICKETS ════════════════════════════════════ -->
+      <div class="section" id="sec-tickets">
+        <div class="page-heading"><h2>Tickets</h2><p>Manage all open support cases</p></div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Open</div><div class="kpi-value" style="color:var(--accent)">12</div><div class="kpi-trend t-neu">Active</div></div>
+            <div class="kpi-icon" style="background:#dbeafe;color:var(--accent)"><i class="fas fa-folder-open"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Pending</div><div class="kpi-value" style="color:var(--amber)">7</div><div class="kpi-trend t-neu">Awaiting client</div></div>
+            <div class="kpi-icon" style="background:#fef3c7;color:var(--amber)"><i class="fas fa-hourglass-half"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Escalated</div><div class="kpi-value" style="color:var(--red)">3</div><div class="kpi-trend t-down">Urgent</div></div>
+            <div class="kpi-icon" style="background:#fee2e2;color:var(--red)"><i class="fas fa-fire"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Resolved Today</div><div class="kpi-value" style="color:var(--green)">21</div><div class="kpi-trend t-up"><i class="fas fa-arrow-up"></i> 18%</div></div>
+            <div class="kpi-icon" style="background:#dcfce7;color:var(--green)"><i class="fas fa-check-circle"></i></div>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <select class="f-select" id="tktStat" onchange="renderTickets()">
+            <option value="all">All Status</option>
+            <option value="open">Open</option>
+            <option value="pending">Pending</option>
+            <option value="escalated">Escalated</option>
+            <option value="resolved">Resolved</option>
+          </select>
+          <button class="btn-export" style="margin-left:auto"><i class="fas fa-download"></i> Export CSV</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>ID</th><th>Subject</th><th>Client</th><th>Category</th><th>Priority</th><th>Status</th><th>Opened</th><th>Actions</th></tr></thead>
+            <tbody id="ticketBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ ESCALATIONS ═══════════════════════════════ -->
+      <div class="section" id="sec-escalations">
+        <div class="page-heading"><h2>Escalations</h2><p>Cases requiring urgent attention or management review</p></div>
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Critical</div><div class="kpi-value" style="color:var(--red)">3</div><div class="kpi-trend t-down">Immediate action</div></div>
+            <div class="kpi-icon" style="background:#fee2e2;color:var(--red)"><i class="fas fa-fire"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">High Priority</div><div class="kpi-value" style="color:var(--amber)">4</div><div class="kpi-trend t-neu">Assigned</div></div>
+            <div class="kpi-icon" style="background:#fef3c7;color:var(--amber)"><i class="fas fa-exclamation-triangle"></i></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-left"><div class="kpi-label">Avg Resolution</div><div class="kpi-value">2.4h</div><div class="kpi-trend t-up">Improving</div></div>
+            <div class="kpi-icon" style="background:#dbeafe;color:var(--accent)"><i class="fas fa-tachometer-alt"></i></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Active Escalations</h3></div>
+          <table>
+            <thead><tr><th>ID</th><th>Subject</th><th>Client</th><th>Priority</th><th>Assigned To</th><th>Age</th><th>Actions</th></tr></thead>
+            <tbody id="escalBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ SETTINGS ════════════════════════════════════ -->
+      <div class="section" id="sec-settings">
+        <div class="page-heading"><h2>Settings</h2><p>Manage your profile and preferences</p></div>
+        <div class="grid-eq">
+          <div class="card"><div class="card-head"><h3>Profile</h3></div>
+            <div class="card-body">
+              <div class="s-field"><label>Full Name</label><input class="s-input" id="setName" type="text"/></div>
+              <div class="s-field"><label>Email</label><input class="s-input" id="setEmail" type="email"/></div>
+              <div class="s-field"><label>Role</label><input class="s-input" value="Back Office & Support" disabled/></div>
+              <button class="btn-save" style="margin-top:8px" onclick="saveProfile()">Save Changes</button>
+            </div>
+          </div>
+          <div class="card"><div class="card-head"><h3>Notifications</h3></div>
+            <div class="card-body">
+              <div class="toggle-row"><span>New withdrawal pending</span><label class="toggle"><input type="checkbox" checked/><span class="slider"></span></label></div>
+              <div class="toggle-row"><span>New chat assigned</span><label class="toggle"><input type="checkbox" checked/><span class="slider"></span></label></div>
+              <div class="toggle-row"><span>Escalation alerts</span><label class="toggle"><input type="checkbox" checked/><span class="slider"></span></label></div>
+              <div class="toggle-row"><span>Reconciliation mismatch</span><label class="toggle"><input type="checkbox" checked/><span class="slider"></span></label></div>
+              <div class="toggle-row"><span>Daily digest email</span><label class="toggle"><input type="checkbox"/><span class="slider"></span></label></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /dashboard -->
+
+<!-- Logout Modal -->
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal">
+    <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
+    <h3>Confirm Logout</h3>
+    <p>Are you sure you want to sign out?</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="document.getElementById('logoutModal').classList.remove('show')">Cancel</button>
+      <button class="btn-danger" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Data ───────────────────────────────────────────── */
+const TRANSACTIONS = [
+  {id:"TXN-9821",client:"James Thornton", initials:"JT",color:"#2563eb",type:"Deposit",   amount:15000,method:"Wire",   account:"MT4-41021",time:"09:42 AM",status:"completed"},
+  {id:"TXN-9822",client:"Sofia Russo",    initials:"SR",color:"#7c3aed",type:"Withdrawal",amount:3200, method:"Card",   account:"MT5-38201",time:"09:31 AM",status:"pending"},
+  {id:"TXN-9823",client:"Rami Al-Hassan",initials:"RA",color:"#059669",type:"Deposit",   amount:50000,method:"Wire",   account:"MT4-19283",time:"09:15 AM",status:"processing"},
+  {id:"TXN-9824",client:"Ying Chen",      initials:"YC",color:"#d97706",type:"Deposit",   amount:2000, method:"Card",   account:"MT5-28471",time:"09:02 AM",status:"completed"},
+  {id:"TXN-9825",client:"Elena Kowalski",initials:"EK",color:"#dc2626",type:"Withdrawal",amount:5000, method:"Skrill", account:"MT4-30211",time:"08:54 AM",status:"completed"},
+  {id:"TXN-9826",client:"Nadia Petrov",  initials:"NP",color:"#0891b2",type:"Deposit",   amount:20000,method:"Crypto", account:"MT5-44120",time:"08:41 AM",status:"failed"},
+  {id:"TXN-9827",client:"Tom Whitfield", initials:"TW",color:"#65a30d",type:"Deposit",   amount:8000, method:"Card",   account:"MT4-55310",time:"08:30 AM",status:"completed"},
+  {id:"TXN-9828",client:"Adebayo Okafor",initials:"AO",color:"#9333ea",type:"Withdrawal",amount:500,  method:"Neteller",account:"MT5-61042",time:"08:20 AM",status:"pending"},
+];
+
+const PENDING_WD = TRANSACTIONS.filter(t=>t.type==='Withdrawal'&&t.status==='pending');
+
+const CLIENTS = [
+  {id:"C-1001",name:"James Thornton", initials:"JT",color:"#2563eb",country:"🇬🇧 United Kingdom",balance:42800, type:"Professional",kyc:"verified", status:"active"},
+  {id:"C-1002",name:"Sofia Russo",    initials:"SR",color:"#7c3aed",country:"🇮🇹 Italy",          balance:15600, type:"Retail",      kyc:"verified", status:"active"},
+  {id:"C-1003",name:"Rami Al-Hassan",initials:"RA",color:"#059669",country:"🇦🇪 UAE",            balance:98400, type:"Professional",kyc:"verified", status:"active"},
+  {id:"C-1004",name:"Ying Chen",      initials:"YC",color:"#d97706",country:"🇸🇬 Singapore",     balance:7200,  type:"Retail",      kyc:"pending",  status:"active"},
+  {id:"C-1005",name:"Adebayo Okafor",initials:"AO",color:"#9333ea",country:"🇳🇬 Nigeria",       balance:3100,  type:"Retail",      kyc:"pending",  status:"active"},
+  {id:"C-1006",name:"Elena Kowalski",initials:"EK",color:"#dc2626",country:"🇵🇱 Poland",        balance:21500, type:"Retail",      kyc:"verified", status:"active"},
+  {id:"C-1007",name:"Marco Bianchi", initials:"MB",color:"#64748b",country:"🇮🇹 Italy",          balance:0,     type:"Retail",      kyc:"failed",   status:"suspended"},
+  {id:"C-1008",name:"Nadia Petrov",  initials:"NP",color:"#0891b2",country:"🇷🇺 Russia",        balance:54000, type:"Professional",kyc:"verified", status:"active"},
+];
+
+const CHATS = [
+  {client:"Elena Rodriguez",initials:"ER",color:"#16a34a",topic:"Withdrawal delay",   wait:"2m",  status:"active"},
+  {client:"James Thornton", initials:"JT",color:"#2563eb",topic:"Deposit not showing",wait:"5m",  status:"active"},
+  {client:"Yuki Tanaka",    initials:"YT",color:"#d97706",topic:"KYC document issue", wait:"8m",  status:"waiting"},
+  {client:"Omar Al-Farsi",  initials:"OA",color:"#7c3aed",topic:"Login problem",      wait:"12m", status:"waiting"},
+  {client:"Priya Nair",     initials:"PN",color:"#dc2626",topic:"Account suspended",  wait:"15m", status:"waiting"},
+];
+
+const TICKETS = [
+  {id:"TKT-1021",subject:"Withdrawal Delay MT4 #8821",client:"Elena Rodriguez",cat:"Withdrawal",priority:"critical",status:"escalated",opened:"10m ago"},
+  {id:"TKT-1022",subject:"Password Reset Request",    client:"Marcus Aurelius", cat:"Account",   priority:"medium",  status:"pending",  opened:"24m ago"},
+  {id:"TKT-1023",subject:"KYC Document Approval",     client:"Sarah Jenkins",   cat:"KYC",       priority:"high",    status:"open",     opened:"1h ago"},
+  {id:"TKT-1024",subject:"Trade Not Executed EURUSD", client:"Tariq Mansouri",  cat:"Trade",     priority:"high",    status:"open",     opened:"2h ago"},
+  {id:"TKT-1025",subject:"Deposit Not Credited",      client:"Yuki Tanaka",     cat:"Withdrawal",priority:"critical",status:"escalated",opened:"2h ago"},
+  {id:"TKT-1026",subject:"Margin Call Dispute",       client:"Account #99210",  cat:"Trade",     priority:"critical",status:"escalated",opened:"3h ago"},
+  {id:"TKT-1027",subject:"Bonus Not Applied",         client:"James Whitfield", cat:"Account",   priority:"medium",  status:"pending",  opened:"4h ago"},
+  {id:"TKT-1028",subject:"Swap Charge Dispute",       client:"Luca Conti",      cat:"Trade",     priority:"medium",  status:"resolved", opened:"6h ago"},
+];
+
+const ESCALATIONS = [
+  {id:"ESC-041",subject:"Withdrawal Delay MT4 #8821", client:"Elena Rodriguez (VIP)",priority:"critical",assignee:"Karim T.",age:"10m"},
+  {id:"ESC-042",subject:"Deposit Not Credited $22k",  client:"Yuki Tanaka",           priority:"critical",assignee:"Sara M.", age:"2h"},
+  {id:"ESC-043",subject:"Margin Call Dispute",         client:"Account #99210",        priority:"critical",assignee:"Manager",age:"3h"},
+  {id:"ESC-044",subject:"Unrecognized Trade",          client:"Account #11029",        priority:"high",    assignee:"Lena R.",age:"3h 15m"},
+  {id:"ESC-045",subject:"KYC Rejection Appeal",        client:"Hassan El-Masri",       priority:"high",    assignee:"Omar H.",age:"5h"},
+  {id:"ESC-046",subject:"Chargeback Dispute Visa",     client:"Marco Bianchi",         priority:"high",    assignee:"Priya S.",age:"1d"},
+];
+
+/* ── Helpers ────────────────────────────────────────── */
+const $   = id => document.getElementById(id);
+const cap = s  => s.charAt(0).toUpperCase()+s.slice(1);
+const fmt = n  => '$'+n.toLocaleString();
+
+function sBadge(s) {
+  const m={completed:'b-green',pending:'b-amber',failed:'b-red',processing:'b-blue',
+           open:'b-blue',escalated:'b-red',resolved:'b-green',active:'b-green',waiting:'b-amber'};
+  return `<span class="badge ${m[s]||'b-gray'}">${s==='active'?'<i class="fas fa-circle" style="font-size:7px"></i> ':''} ${cap(s)}</span>`;
+}
+function pBadge(p) {
+  const m={critical:'b-red',high:'b-amber',medium:'b-blue'};
+  return `<span class="badge ${m[p]||'b-gray'}">${cap(p)}</span>`;
+}
+function kBadge(k) {
+  const m={verified:'b-green',pending:'b-amber',failed:'b-red'};
+  return `<span class="badge ${m[k]||'b-gray'}">${cap(k)}</span>`;
+}
+function cliCell(name,initials,color,sub) {
+  return `<div class="cli-row"><div class="cli-ava" style="background:${color}">${initials}</div>
+  <div><div class="cli-name">${name}</div><div class="cli-id">${sub}</div></div></div>`;
+}
+
+/* ── Renders ────────────────────────────────────────── */
+function renderPendingWd() {
+  $('pendingWdBody').innerHTML = PENDING_WD.map(t=>`<tr>
+    <td>${cliCell(t.client,t.initials,t.color,t.account)}</td>
+    <td style="font-weight:700;color:var(--red)">${fmt(t.amount)}</td>
+    <td>${t.method}</td>
+    <td style="color:var(--muted);font-size:12px">${t.time}</td>
+    <td>
+      <button class="btn-approve" onclick="alert('Approved!')">Approve</button>
+      <button class="btn-reject"  onclick="alert('Rejected!')">Reject</button>
+      <button class="btn-view"    onclick="alert('View details')">View</button>
+    </td></tr>`).join('');
+}
+
+function renderOvChat() {
+  $('ovChatList').innerHTML = CHATS.slice(0,4).map(c=>`
+    <div class="chat-item">
+      <div class="chat-dot" style="background:${c.status==='active'?'#16a34a':'#d97706'}"></div>
+      <div style="flex:1">
+        <div class="chat-name">${c.client}</div>
+        <div class="chat-msg">${c.topic}</div>
+      </div>
+      <div class="chat-time">${c.wait}</div>
+    </div>`).join('');
+}
+
+function renderTxns() {
+  const tf=$('txnType').value, sf=$('txnStat').value;
+  const d=TRANSACTIONS.filter(t=>(tf==='all'||t.type===tf)&&(sf==='all'||t.status===sf));
+  $('txnBody').innerHTML=d.map(t=>`<tr>
+    <td style="color:var(--muted);font-size:12px;font-weight:600">${t.id}</td>
+    <td>${cliCell(t.client,t.initials,t.color,t.account)}</td>
+    <td style="color:${t.type==='Deposit'?'var(--green)':'var(--red)'};font-weight:600">${t.type}</td>
+    <td style="font-weight:700">${fmt(t.amount)}</td>
+    <td>${t.method}</td>
+    <td style="color:var(--muted);font-size:12px">${t.account}</td>
+    <td style="color:var(--muted);font-size:12px">${t.time}</td>
+    <td>${sBadge(t.status)}</td>
+    <td>
+      ${t.status==='pending'?`<button class="btn-approve" onclick="alert('Approved!')">Approve</button><button class="btn-reject" onclick="alert('Rejected!')">Reject</button>`:''}
+      <button class="btn-view" onclick="alert('View details')">View</button>
+    </td></tr>`).join('');
+}
+
+function renderClients() {
+  $('clientBody').innerHTML=CLIENTS.map(c=>`<tr>
+    <td>${cliCell(c.name,c.initials,c.color,c.id)}</td>
+    <td>${c.country}</td>
+    <td style="font-weight:700">${fmt(c.balance)}</td>
+    <td>${c.type}</td>
+    <td>${kBadge(c.kyc)}</td>
+    <td>${sBadge(c.status)}</td>
+    <td><button class="btn-view" onclick="alert('View client')">View</button></td>
+  </tr>`).join('');
+}
+
+function renderChats() {
+  $('chatBody').innerHTML=CHATS.map(c=>`<tr>
+    <td>${cliCell(c.client,c.initials,c.color,'Client')}</td>
+    <td>${c.topic}</td>
+    <td style="color:var(--muted)">${c.wait}</td>
+    <td>${sBadge(c.status)}</td>
+    <td>
+      <button class="btn-approve" onclick="alert('Opening chat…')">Respond</button>
+      <button class="btn-escalate" onclick="alert('Escalated!')">Escalate</button>
+    </td></tr>`).join('');
+}
+
+function renderTickets() {
+  const sf=$('tktStat').value;
+  const d=TICKETS.filter(t=>sf==='all'||t.status===sf);
+  $('ticketBody').innerHTML=d.map(t=>`<tr>
+    <td style="color:var(--muted);font-size:12px;font-weight:600">${t.id}</td>
+    <td style="font-weight:600">${t.subject}</td>
+    <td>${t.client}</td>
+    <td>${t.cat}</td>
+    <td>${pBadge(t.priority)}</td>
+    <td>${sBadge(t.status)}</td>
+    <td style="color:var(--muted);font-size:12px">${t.opened}</td>
+    <td>
+      <button class="btn-resolve"  onclick="alert('Resolved!')">Resolve</button>
+      <button class="btn-escalate" onclick="alert('Escalated!')">Escalate</button>
+      <button class="btn-view"     onclick="alert('View ticket')">View</button>
+    </td></tr>`).join('');
+}
+
+function renderEscals() {
+  $('escalBody').innerHTML=ESCALATIONS.map(e=>`<tr>
+    <td style="color:var(--muted);font-size:12px;font-weight:600">${e.id}</td>
+    <td style="font-weight:600">${e.subject}</td>
+    <td>${e.client}</td>
+    <td>${pBadge(e.priority)}</td>
+    <td>${e.assignee}</td>
+    <td style="color:var(--muted)">${e.age}</td>
+    <td>
+      <button class="btn-resolve" onclick="alert('Resolved!')">Resolve</button>
+      <button class="btn-view"    onclick="alert('View details')">View</button>
+    </td></tr>`).join('');
+}
+
+/* ── Navigation ─────────────────────────────────────── */
+const PAGE_TITLES = {
+  overview:'Overview', transactions:'Transactions', reconciliation:'Reconciliation',
+  clients:'Clients', reports:'Reports', livechat:'Live Chat',
+  tickets:'Tickets', escalations:'Escalations', settings:'Settings'
+};
+const PAGE_SUBS = {
+  overview:'Dashboard summary for today',
+  transactions:'Review and process deposits & withdrawals',
+  reconciliation:'Daily balance matching across payment sources',
+  clients:'View and manage client accounts',
+  reports:'Monthly financial and operational summaries',
+  livechat:'Handle active client conversations',
+  tickets:'Manage all open support cases',
+  escalations:'Cases requiring urgent attention',
+  settings:'Manage your profile and preferences'
+};
+
+function goTo(name, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  $('sec-'+name)?.classList.add('active');
+  if(el) el.classList.add('active');
+  else document.querySelector(`.nav-item[onclick*="${name}"]`)?.classList.add('active');
+  $('topTitle').textContent = PAGE_TITLES[name]||name;
+  $('topSub').textContent   = PAGE_SUBS[name]||'';
+}
+
+/* ── Auth ────────────────────────────────────────────── */
+let USER = {name:'',email:''};
+
+function showScreen(id) {
+  document.querySelectorAll('.auth-wrap').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+function doLogin() {
+  const email=$('lEmail').value.trim(), pass=$('lPass').value;
+  if(!email||!pass){$('loginErr').textContent='Please enter your email and password.';$('loginErr').classList.add('show');return;}
+  $('loginErr').classList.remove('show');
+  const name=email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  launch(name,email);
+}
+
+function doSignup() {
+  const name=$('sName').value.trim(),email=$('sEmail').value.trim(),pass=$('sPass').value;
+  if(!name||!email||!pass){$('signupErr').textContent='Please fill in all fields.';$('signupErr').classList.add('show');return;}
+  if(pass.length<6){$('signupErr').textContent='Password must be at least 6 characters.';$('signupErr').classList.add('show');return;}
+  $('signupErr').classList.remove('show');
+  launch(name,email);
+}
+
+function launch(name,email) {
+  USER={name,email};
+  const ini=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  ['sideAva','topAva'].forEach(id=>{$(id).textContent=ini;});
+  $('sideName').textContent=$('topName').textContent=name;
+  $('setName').value=name; $('setEmail').value=email;
+  const h=new Date().getHours();
+  const g=h<12?'Good morning':h<18?'Good afternoon':'Good evening';
+  $('greetMsg').textContent=`${g}, ${name.split(' ')[0]}. Here's what needs your attention today.`;
+  document.querySelectorAll('.auth-wrap').forEach(s=>s.classList.remove('active'));
+  $('dashboard').classList.add('active');
+  renderPendingWd(); renderOvChat(); renderTxns();
+  renderClients(); renderChats(); renderTickets(); renderEscals();
+}
+
+function doLogout() {
+  $('logoutModal').classList.remove('show');
+  $('dashboard').classList.remove('active');
+  $('lEmail').value=''; $('lPass').value='';
+  showScreen('loginScreen');
+}
+
+function saveProfile() {
+  const name=$('setName').value.trim(),email=$('setEmail').value.trim();
+  if(!name||!email)return;
+  const ini=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  ['sideAva','topAva'].forEach(id=>{$(id).textContent=ini;});
+  $('sideName').textContent=$('topName').textContent=name;
+  alert('Profile saved successfully.');
+}
+
+/* ── Enter key on login ─────────────────────────────── */
+['lEmail','lPass'].forEach(id=>$(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
+['sName','sEmail','sPass'].forEach(id=>$(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doSignup();}));
+$('logoutModal')?.addEventListener('click',e=>{if(e.target===$('logoutModal'))$('logoutModal').classList.remove('show');});
+</script>
+</body>
+</html>
