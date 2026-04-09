@@ -1729,10 +1729,12 @@ function cinemaLogin(name, email, btnEl) {
 function doLogin() {
   const email=$('lEmail').value.trim(), pass=$('lPass').value;
   if(!email||!pass){$('loginErr').textContent='Please enter your email and password.';$('loginErr').classList.add('show');return;}
+  if(email!=='support@opofinance.com'||pass!=='12345678'){
+    $('loginErr').textContent='Incorrect email or password.';$('loginErr').classList.add('show');return;
+  }
   $('loginErr').classList.remove('show');
   const btn = document.querySelector('#loginScreen .auth-btn');
-  const name = email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-  cinemaLogin(name, email, btn);
+  cinemaLogin('Support Agent', email, btn);
 }
 
 function doSignup() {
