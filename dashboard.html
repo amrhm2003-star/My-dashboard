@@ -183,6 +183,64 @@
       100% { box-shadow: 0 20px 60px rgba(0,0,0,.25); }
     }
 
+    /* ══ WRONG PASSWORD ANIMATIONS ═════════════════════ */
+    /* Full-screen red flash */
+    #errorFlash {
+      position:fixed; inset:0; z-index:7999; pointer-events:none;
+      background:radial-gradient(ellipse at center, rgba(239,68,68,.55) 0%, rgba(180,10,10,.7) 100%);
+      opacity:0; display:none;
+    }
+    #errorFlash.fire {
+      display:block;
+      animation: screenBleed .9s cubic-bezier(.4,0,.6,1) forwards;
+    }
+    @keyframes screenBleed {
+      0%   { opacity:0;   transform:scale(1.04); }
+      18%  { opacity:1;   transform:scale(1); }
+      50%  { opacity:.75; }
+      80%  { opacity:.35; }
+      100% { opacity:0;   transform:scale(1.03); }
+    }
+
+    /* Vignette pulse on auth-wrap */
+    .auth-wrap.wrong::after {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      box-shadow:inset 0 0 120px rgba(239,68,68,.45);
+      animation: vignetteOut .9s ease forwards;
+    }
+    @keyframes vignetteOut {
+      0%   { opacity:1; }
+      100% { opacity:0; }
+    }
+
+    /* Card shake + red border */
+    .auth-card.wrong {
+      animation: cardShake .55s cubic-bezier(.36,.07,.19,.97) both;
+      border-color: rgba(239,68,68,.7) !important;
+      box-shadow: 0 0 0 3px rgba(239,68,68,.2), 0 40px 80px rgba(239,68,68,.2) !important;
+    }
+    @keyframes cardShake {
+      0%,100% { transform:translateX(0) rotate(0deg); }
+      10%     { transform:translateX(-10px) rotate(-.6deg); }
+      22%     { transform:translateX(9px) rotate(.5deg); }
+      34%     { transform:translateX(-7px) rotate(-.4deg); }
+      46%     { transform:translateX(6px) rotate(.3deg); }
+      58%     { transform:translateX(-4px); }
+      70%     { transform:translateX(3px); }
+      82%     { transform:translateX(-2px); }
+    }
+
+    /* Input fields flash red */
+    .field input.wrong-input {
+      border-color:rgba(239,68,68,.8) !important;
+      box-shadow:0 0 0 3px rgba(239,68,68,.18), 0 0 16px rgba(239,68,68,.2) !important;
+      animation: inputPulse .5s ease;
+    }
+    @keyframes inputPulse {
+      0%,100% { background:#080d18; }
+      40%     { background:rgba(239,68,68,.1); }
+    }
+
     /* ══ FULL SCREEN RIPPLE TRANSITION ══════════════════ */
     #loginRipple {
       position:fixed; inset:0; z-index:8000;
@@ -809,6 +867,9 @@
   </style>
 </head>
 <body>
+
+<!-- ══ ERROR FLASH ══════════════════════════════════ -->
+<div id="errorFlash"></div>
 
 <!-- ══ LOGIN RIPPLE ════════════════════════════════ -->
 <div id="loginRipple"><div class="ripple-circle" id="rippleCircle"></div></div>
@@ -1726,11 +1787,52 @@ function cinemaLogin(name, email, btnEl) {
 }
 
 /* ── Login & Signup ──────────────────────────────────── */
+function triggerWrongPassword() {
+  const card    = document.querySelector('#loginScreen .auth-card');
+  const screen  = $('loginScreen');
+  const flash   = $('errorFlash');
+  const inputs  = document.querySelectorAll('#loginScreen .field input');
+
+  // Red screen flash
+  flash.classList.remove('fire');
+  void flash.offsetWidth;
+  flash.classList.add('fire');
+  setTimeout(() => flash.classList.remove('fire'), 950);
+
+  // Vignette on auth-wrap
+  screen.classList.remove('wrong');
+  void screen.offsetWidth;
+  screen.classList.add('wrong');
+  setTimeout(() => screen.classList.remove('wrong'), 950);
+
+  // Card shake + red border
+  card.classList.remove('wrong');
+  void card.offsetWidth;
+  card.classList.add('wrong');
+  setTimeout(() => card.classList.remove('wrong'), 700);
+
+  // Inputs flash red
+  inputs.forEach(inp => {
+    inp.classList.remove('wrong-input');
+    void inp.offsetWidth;
+    inp.classList.add('wrong-input');
+    setTimeout(() => inp.classList.remove('wrong-input'), 700);
+  });
+}
+
 function doLogin() {
   const email=$('lEmail').value.trim(), pass=$('lPass').value;
-  if(!email||!pass){$('loginErr').textContent='Please enter your email and password.';$('loginErr').classList.add('show');return;}
+  if(!email||!pass){
+    $('loginErr').textContent='Please enter your email and password.';
+    $('loginErr').classList.add('show');
+    triggerWrongPassword();
+    return;
+  }
   if(email!=='support@opofinance.com'||pass!=='12345678'){
-    $('loginErr').textContent='Incorrect email or password.';$('loginErr').classList.add('show');return;
+    $('loginErr').textContent='Incorrect email or password.';
+    $('loginErr').classList.add('show');
+    triggerWrongPassword();
+    return;
   }
   $('loginErr').classList.remove('show');
   const btn = document.querySelector('#loginScreen .auth-btn');
