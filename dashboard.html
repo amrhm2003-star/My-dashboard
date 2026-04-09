@@ -1871,7 +1871,12 @@ function doLogin() {
     triggerWrongPassword();
     return;
   }
-  if(email!=='support@opofinance.com'||pass!=='12345678'){
+  const USERS = {
+    'support@opofinance.com': { pass:'12345678', name:'Support Agent' },
+    'arash@opofinance.com':   { pass:'12345678', name:'Arash' },
+  };
+  const user = USERS[email];
+  if(!user || pass !== user.pass){
     $('loginErr').textContent='Incorrect email or password.';
     $('loginErr').classList.add('show');
     triggerWrongPassword();
@@ -1889,7 +1894,7 @@ function doLogin() {
   }
   $('loginErr').classList.remove('show');
   const btn = document.querySelector('#loginScreen .auth-btn');
-  cinemaLogin('Support Agent', email, btn);
+  cinemaLogin(user.name, email, btn);
 }
 
 function doSignup() {
