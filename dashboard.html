@@ -1188,7 +1188,7 @@
             <option value="processing">Processing</option>
             <option value="failed">Failed</option>
           </select>
-          <button class="btn-export" style="margin-left:auto"><i class="fas fa-download"></i> Export CSV</button>
+          <button class="btn-approve" style="margin-left:auto;margin-right:8px" onclick="openAddTxnModal()"><i class="fas fa-plus"></i> Add New</button><button class="btn-export"><i class="fas fa-download"></i> Export CSV</button>
         </div>
         <div class="card">
           <table>
@@ -1378,7 +1378,7 @@
             <option value="escalated">Escalated</option>
             <option value="resolved">Resolved</option>
           </select>
-          <button class="btn-export" style="margin-left:auto"><i class="fas fa-download"></i> Export CSV</button>
+          <button class="btn-approve" style="margin-left:auto;margin-right:8px" onclick="openAddTxnModal()"><i class="fas fa-plus"></i> Add New</button><button class="btn-export"><i class="fas fa-download"></i> Export CSV</button>
         </div>
         <div class="card">
           <table>
@@ -1564,22 +1564,105 @@ function renderOvChat() {
     </div>`).join('');
 }
 
-function renderTxns() {
+async function renderTxns() {
   const tf=$('txnType').value, sf=$('txnStat').value;
-  const d=TRANSACTIONS.filter(t=>(tf==='all'||t.type===tf)&&(sf==='all'||t.status===sf));
-  $('txnBody').innerHTML=d.map(t=>`<tr>
-    <td style="color:var(--muted);font-size:12px;font-weight:600">${t.id}</td>
-    <td>${cliCell(t.client,t.initials,t.color,t.account)}</td>
-    <td style="color:${t.type==='Deposit'?'var(--green)':'var(--red)'};font-weight:600">${t.type}</td>
-    <td style="font-weight:700">${fmt(t.amount)}</td>
-    <td>${t.method}</td>
-    <td style="color:var(--muted);font-size:12px">${t.account}</td>
-    <td style="color:var(--muted);font-size:12px">${t.time}</td>
-    <td>${sBadge(t.status)}</td>
-    <td>
-      ${t.status==='pending'?`<button class="btn-approve" onclick="alert('Approved!')">Approve</button><button class="btn-reject" onclick="alert('Rejected!')">Reject</button>`:''}
-      <button class="btn-view" onclick="alert('View details')">View</button>
-    </td></tr>`).join('');
+  $('txnBody').innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">Loading...</td></tr>';
+  try {
+    const res = await fetch(`http://localhost:3000/api/transactions?type=${tf}&status=${sf}`);
+    const data = await res.json();
+    if (!data.success) { $('txnBody').innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--red)">'+data.message+'</td></tr>'; return; }
+    const d = data.data;
+    if (!d.length) { $('txnBody').innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">No transactions found.</td></tr>'; return; }
+    $('txnBody').innerHTML=d.map(t=>{
+      const initials = t.client_name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const colors = ['#2563eb','#7c3aed','#059669','#dc2626','#d97706'];
+      const color = colors[t.id % colors.length];
+      const time = new Date(t.created_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      return `<tr>
+        <td style="color:var(--muted);font-size:12px;font-weight:600">TXN-${t.id}</td>
+        <td>${cliCell(t.client_name,initials,color,t.account)}</td>
+        <td style="color:${t.type==='Deposit'?'var(--green)':'var(--red)'};font-weight:600">${t.type}</td>
+        <td style="font-weight:700">${fmt(t.amount)}</td>
+        <td>${t.method}</td>
+        <td style="color:var(--muted);font-size:12px">${t.account}</td>
+        <td style="color:var(--muted);font-size:12px">${time}</td>
+        <td>${sBadge(t.status)}</td>
+        <td>
+          ${t.status==='pending'?`<button class="btn-approve" onclick="approveTxn(${t.id})">Approve</button><button class="btn-reject" onclick="rejectTxn(${t.id})">Reject</button>`:''}
+          <button class="btn-view" onclick="editTxnModal(${t.id},'${t.client_name}','${t.client_email}',${t.amount},'${t.type}','${t.method}','${t.account}','${t.status}')">Edit</button>
+          <button class="btn-reject" onclick="deleteTxn(${t.id})">Delete</button>
+        </td></tr>`;
+    }).join('');
+  } catch(e) {
+    $('txnBody').innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--red)">Cannot reach server.</td></tr>';
+  }
+}
+
+async function approveTxn(id) {
+  if (!confirm('Approve this transaction?')) return;
+  const res = await fetch(`http://localhost:3000/api/transactions/${id}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ status: 'completed' })
+  });
+  const data = await res.json();
+  if (data.success) renderTxns(); else alert(data.message);
+}
+
+async function rejectTxn(id) {
+  if (!confirm('Reject this transaction?')) return;
+  const res = await fetch(`http://localhost:3000/api/transactions/${id}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ status: 'failed' })
+  });
+  const data = await res.json();
+  if (data.success) renderTxns(); else alert(data.message);
+}
+
+async function deleteTxn(id) {
+  if (!confirm('Delete this transaction? This cannot be undone.')) return;
+  const res = await fetch(`http://localhost:3000/api/transactions/${id}`, { method:'DELETE' });
+  const data = await res.json();
+  if (data.success) renderTxns(); else alert(data.message);
+}
+
+function openAddTxnModal() {
+  $('txnModalTitle').textContent = 'Add Transaction';
+  $('txnModalId').value = '';
+  $('txnModalName').value=''; $('txnModalEmail').value=''; $('txnModalAmount').value='';
+  $('txnModalType').value='Deposit'; $('txnModalMethod').value=''; $('txnModalAccount').value='';
+  $('txnModalStatus').value='pending';
+  $('txnModal').classList.add('show');
+}
+
+function editTxnModal(id,name,email,amount,type,method,account,status) {
+  $('txnModalTitle').textContent = 'Edit Transaction';
+  $('txnModalId').value=id;
+  $('txnModalName').value=name; $('txnModalEmail').value=email; $('txnModalAmount').value=amount;
+  $('txnModalType').value=type; $('txnModalMethod').value=method; $('txnModalAccount').value=account;
+  $('txnModalStatus').value=status;
+  $('txnModal').classList.add('show');
+}
+
+async function saveTxn() {
+  const id=$('txnModalId').value;
+  const body={
+    client_name:$('txnModalName').value.trim(),
+    client_email:$('txnModalEmail').value.trim(),
+    amount:$('txnModalAmount').value,
+    type:$('txnModalType').value,
+    method:$('txnModalMethod').value.trim(),
+    account:$('txnModalAccount').value.trim(),
+    status:$('txnModalStatus').value
+  };
+  if(!body.client_name||!body.client_email||!body.amount||!body.method||!body.account){
+    alert('Please fill in all fields.'); return;
+  }
+  const url = id ? `http://localhost:3000/api/transactions/${id}` : 'http://localhost:3000/api/transactions';
+  const method = id ? 'PUT' : 'POST';
+  const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  const data = await res.json();
+  if (data.success) { $('txnModal').classList.remove('show'); renderTxns(); }
+  else alert(data.message);
 }
 
 function renderClients() {
@@ -1908,7 +1991,7 @@ function triggerWrongPassword() {
   });
 }
 
-function doLogin() {
+async function doLogin() {
   const email=$('lEmail').value.trim(), pass=$('lPass').value;
   if(!email||!pass){
     $('loginErr').textContent='Please enter your email and password.';
@@ -1916,39 +1999,65 @@ function doLogin() {
     triggerWrongPassword();
     return;
   }
-  const USERS = {
-    'support@opofinance.com': { pass:'12345678', name:'Support Agent' },
-    'arash@opofinance.com':   { pass:'12345678', name:'Arash' },
-  };
-  const user = USERS[email];
-  if(!user || pass !== user.pass){
-    $('loginErr').textContent='Incorrect email or password.';
-    $('loginErr').classList.add('show');
-    triggerWrongPassword();
-    return;
-  }
-  // Save or clear remembered credentials
-  if($('rememberMe').checked){
-    localStorage.setItem('opo_email', email);
-    localStorage.setItem('opo_pass',  pass);
-    localStorage.setItem('opo_remember','1');
-  } else {
-    localStorage.removeItem('opo_email');
-    localStorage.removeItem('opo_pass');
-    localStorage.removeItem('opo_remember');
-  }
-  $('loginErr').classList.remove('show');
   const btn = document.querySelector('#loginScreen .auth-btn');
-  cinemaLogin(user.name, email, btn);
+  btn.classList.add('loading');
+  try {
+    const res = await fetch('http://localhost:3000/api/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      $('loginErr').textContent = data.message || 'Incorrect email or password.';
+      $('loginErr').classList.add('show');
+      btn.classList.remove('loading');
+      triggerWrongPassword();
+      return;
+    }
+    if($('rememberMe').checked){
+      localStorage.setItem('opo_email', email);
+      localStorage.setItem('opo_remember','1');
+    } else {
+      localStorage.removeItem('opo_email');
+      localStorage.removeItem('opo_remember');
+    }
+    $('loginErr').classList.remove('show');
+    btn.classList.remove('loading');
+    cinemaLogin(data.data.name, email, btn);
+  } catch(e) {
+    $('loginErr').textContent = 'Cannot reach server. Is the backend running?';
+    $('loginErr').classList.add('show');
+    btn.classList.remove('loading');
+    triggerWrongPassword();
+  }
 }
 
-function doSignup() {
+async function doSignup() {
   const name=$('sName').value.trim(),email=$('sEmail').value.trim(),pass=$('sPass').value;
   if(!name||!email||!pass){$('signupErr').textContent='Please fill in all fields.';$('signupErr').classList.add('show');return;}
   if(pass.length<6){$('signupErr').textContent='Password must be at least 6 characters.';$('signupErr').classList.add('show');return;}
   $('signupErr').classList.remove('show');
   const btn = document.querySelector('#signupScreen .auth-btn');
-  cinemaLogin(name, email, btn);
+  btn.classList.add('loading');
+  try {
+    const res = await fetch('http://localhost:3000/api/auth/register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, email, password: pass, role: 'support' })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      $('signupErr').textContent = data.message || 'Registration failed.';
+      $('signupErr').classList.add('show');
+      btn.classList.remove('loading');
+      return;
+    }
+    btn.classList.remove('loading');
+    cinemaLogin(name, email, btn);
+  } catch(e) {
+    $('signupErr').textContent = 'Cannot reach server. Is the backend running?';
+    $('signupErr').classList.add('show');
+    btn.classList.remove('loading');
+  }
 }
 
 /* ── Enter key on login ─────────────────────────────── */
@@ -1956,5 +2065,36 @@ function doSignup() {
 ['sName','sEmail','sPass'].forEach(id=>$(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doSignup();}));
 $('logoutModal')?.addEventListener('click',e=>{if(e.target===$('logoutModal'))$('logoutModal').classList.remove('show');});
 </script>
+
+<!-- TXN MODAL -->
+<div id="txnModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:16px;padding:32px;width:480px;max-width:95vw">
+    <h3 id="txnModalTitle" style="margin-bottom:20px;font-size:18px">Add Transaction</h3>
+    <input type="hidden" id="txnModalId"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Client Name</label><input id="txnModalName" class="field" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px" placeholder="James Thornton"/></div>
+      <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Client Email</label><input id="txnModalEmail" type="email" class="field" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px" placeholder="client@email.com"/></div>
+      <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Amount ($)</label><input id="txnModalAmount" type="number" class="field" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px" placeholder="5000"/></div>
+      <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Type</label><select id="txnModalType" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px"><option value="Deposit">Deposit</option><option value="Withdrawal">Withdrawal</option></select></div>
+      <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Method</label><input id="txnModalMethod" class="field" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px" placeholder="Wire / Card / Crypto"/></div>
+      <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Account #</label><input id="txnModalAccount" class="field" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px" placeholder="MT4-41021"/></div>
+      <div style="grid-column:span 2"><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Status</label><select id="txnModalStatus" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px"><option value="pending">Pending</option><option value="processing">Processing</option><option value="completed">Completed</option><option value="failed">Failed</option></select></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:24px;justify-content:flex-end">
+      <button onclick="$('txnModal').classList.remove('show')" style="padding:10px 20px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer">Cancel</button>
+      <button onclick="saveTxn()" class="btn-approve" style="padding:10px 24px">Save</button>
+    </div>
+  </div>
+</div>
+<script>
+$('txnModal')?.addEventListener('click', e => { if(e.target===$('txnModal')) $('txnModal').classList.remove('show'); });
+// Show modal flex when class added
+const txnModalObs = new MutationObserver(() => {
+  const m=$('txnModal'); if(m) m.style.display=m.classList.contains('show')?'flex':'none';
+});
+if($('txnModal')) txnModalObs.observe($('txnModal'),{attributes:true});
+</script>
+
 </body>
 </html>
+
